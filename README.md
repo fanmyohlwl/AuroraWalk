@@ -1,6 +1,6 @@
 # Aurora Walk · 雪林漫步
 
-A quiet pixel forest walk beneath an emergent aurora. Made for **AI, Design & Creativity**.
+A quiet pixel forest walk beneath an emergent aurora. Current version: **1.0.1**. Made for **AI, Design & Creativity**.
 
 ## Try it locally
 
@@ -16,8 +16,10 @@ Open `http://localhost:8091`. ES modules and camera access require a web server;
 ## Interactions
 
 - **Click the scene** or press **C**: cycle green, violet, crimson, ice blue. The four swatches select a palette directly. Move the mouse to gently influence the breeze.
-- **Enable gestures**: allow the camera, then wave left-right-left. A random event releases snow from nearby trees or summons animals. The first use loads ml5 and its hand model over the network. Camera video stays in the browser; it is neither stored nor sent to a server by this app.
-- **森林惊喜 / W** triggers the same random event without a camera.
+- **Enable gestures**: allow the camera, then hold your hand in view for roughly 0.22 seconds, or move it a small distance in any direction. A random event releases snow from visible nearby trees or summons animals. Acceptance is relaxed to 35% confidence, with a two-second cooldown. Holding still does not repeatedly trigger events. The first use loads ml5 and its hand model over the network. Camera video stays in the browser; it is neither stored nor sent to a server by this app.
+- **Forest event / W** triggers the same random event without a camera.
+- **D / Debug** shows the mirrored camera image, all detected hand landmarks and connections, confidence, inference FPS, cooldown and event counts. Debug does not automatically turn on the camera. Closing the debug window keeps tracking active; use **Turn off camera** to stop tracking and release the stream.
+- The interface starts in **English** on every visit. **中文 / EN** switches the entire interface, dialogs, errors and debug labels. Decorative titles and taglines have been removed.
 - **Space** pauses the entire scene. **H** hides the interface. Fullscreen is available where supported.
 - With the operating system's reduced motion preference, the scene starts paused.
 
@@ -25,11 +27,11 @@ The forest contains reindeer, red foxes, snow hares, wolves and owls, with varyi
 
 ## Plain-language rules for the assignment
 
-See [口头说明](docs/rules-zh.md). The aurora is not a playing video: cells exchange light and motion with their two neighbors, with small local energy inputs and damping. The animal movement includes local alignment and separation. Snow drifts with the same breeze as the light. The camera's forward motion makes world objects grow and move outward as they approach.
+See [口头说明](docs/rules-zh.md). The aurora is not a playing video: cells exchange light and motion with their two neighbors, with small local energy inputs and damping. The animal movement includes local alignment and separation. Snow drifts with the same breeze as the light. The camera's forward motion makes world objects grow and move outward as they approach. The ground is continuous snow, with no road surface or borders. Trees are 18% larger and animal sizes are 50% larger than 1.0.0. Aurora shading uses a limited set of stepped pixel tones instead of smooth gradients and fine vertical lines.
 
 ## Video recording
 
-Click **录制**, select a size and duration, and start. Default: 1920 × 1080, target 30 fps, 15 seconds. Only the scene canvas is recorded; controls, captions, toast messages and the camera preview are excluded. Output is MP4 where browser encoding supports H.264, otherwise WebM. Automatic download starts on completion. Available output sizes include 1280 × 720 and 1080 × 1920.
+Click **Record**, select a size and duration, and start. Default: 1920 × 1080, target 30 fps, 15 seconds. Only the scene canvas is recorded; controls, captions, toast messages and the camera preview are excluded. Output is MP4 where browser encoding supports H.264, otherwise WebM. Automatic download starts on completion. Available output sizes include 1280 × 720 and 1080 × 1920.
 
 Recording uses actual browser rendering. Actual frame rate depends on the device. Keep the tab visible while recording; background tabs may be throttled. Choose 720p on slower computers. Alternate aspect ratios crop the scene centrally, without stretching it. The manual recording option stops automatically after three minutes to bound memory use. The animation has no audio track.
 
@@ -47,6 +49,9 @@ auroraWalk.triggerEvent('snow');       // 'animal' or omit for random
 auroraWalk.pause();
 auroraWalk.resume();
 auroraWalk.setImmersive(true);
+auroraWalk.setLanguage('zh');            // 'en' restores English
+await auroraWalk.setDebug(true);        // Does not turn on the camera
+console.log(auroraWalk.tracking);       // phase, hands, confidence, fps, cooldown
 
 // Start from a button click or other user gesture for browser compatibility.
 await auroraWalk.recording.start({
@@ -78,7 +83,7 @@ This is a static website, ready for GitHub Pages:
 
 ## Structure
 
-- `js/simulation.js`: seeded randomness, neighbor-coupled aurora field, forest pools, animal rules, snow and wave detector.
+- `js/simulation.js`: seeded randomness, neighbor-coupled aurora field, forest pools, animal rules, snow and relaxed hand presence/movement detector.
 - `js/renderer.js`: the actual pixel canvas scene and generated sprites.
 - `js/gestures.js`: lazy-loaded ml5 HandPose, throttled detection, camera lifecycle and recoverable errors.
 - `js/recorder.js`: clean-scene MediaRecorder output and Blob interface.
@@ -99,3 +104,10 @@ Optional real-browser checks need Playwright and an available Chromium browser. 
 - [ml5 1.3.1 distribution](https://cdn.jsdelivr.net/npm/ml5@1.3.1/dist/ml5.min.js): loaded only when gestures are enabled. Its trained model files are fetched separately by ml5.
 
 Original canvas artwork and scene code are included in this repository. No photos, prerecorded video, fonts or stock sprites are downloaded for the scene. Code is released under the MIT license; ml5 and model dependencies retain their own licenses.
+
+## Local Git versions
+
+- `1.0.0`: the completed original version, committed before these changes.
+- `1.0.1`: the snow-only walk, stepped pixel aurora, larger trees/animals, relaxed tracking, D debug panel and English/Chinese interface.
+
+Tags are local annotated Git tags in this directory's repository. No GitHub remote or public deployment has been created.

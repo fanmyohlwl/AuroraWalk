@@ -56,11 +56,11 @@ export class ForestWorld {
     this.ambient=Array.from({length:65},()=>({x:this.random(),y:this.random(),size:this.random()>.9?2:1,speed:.015+this.random()*.023,phase:this.random()*7}));
     this.spawnAnimal('reindeer',33,-1);this.spawnAnimal('fox',22,1);this.spawnAnimal('hare',43,-1);this.spawnAnimal('owl',58,1);
   }
-  makeTree(z){const r=this.random,side=r()<.5?-1:1;return {z:this.distance+z,x:pathAt(this.distance+z)+side*(3.15+r()*26),height:4.4+r()*5.9,width:1.9+r()*2.6,variant:Math.floor(r()*10),shake:0,phase:r()*7};}
+  makeTree(z){const r=this.random,side=r()<.5?-1:1;return {z:this.distance+z,x:pathAt(this.distance+z)+side*(3.15+r()*26),height:(4.4+r()*5.9)*1.18,width:(1.9+r()*2.6)*1.18,variant:Math.floor(r()*10),shake:0,phase:r()*7};}
   setPalette(index){this.palette=((index%PALETTES.length)+PALETTES.length)%PALETTES.length;this.field.excite(.3+this.random()*.4,.7);return PALETTES[this.palette].name;}
   spawnAnimal(species,depth=24+this.random()*35,side=this.random()<.5?-1:1){
     const type=species||SPECIES[Math.floor(this.random()*SPECIES.length)],z=this.distance+depth;
-    const sizes={reindeer:1.8,fox:.73,hare:.46,wolf:1.1,owl:.52};
+    const sizes={reindeer:2.7,fox:1.095,hare:.69,wolf:1.65,owl:.78};
     const a={type,z,x:pathAt(z)+side*(2.75+this.random()*2.6),size:sizes[type]*(.82+this.random()*.35),side,phase:this.random()*7,vx:side*-.05,life:0,flock:this.random()};
     if(type==='owl'){
       const tree=this.trees.filter(t=>t.z-this.distance>15&&t.z-this.distance<70&&Math.abs(t.x-pathAt(t.z))<11).sort((a,b)=>Math.abs(a.z-z)-Math.abs(b.z-z))[0];
@@ -77,7 +77,10 @@ export class ForestWorld {
       this.spawnAnimal(species,18+this.random()*10,side);
       if(species==='reindeer'||species==='hare')this.spawnAnimal(species,28+this.random()*5,side);
     }else{
-      const trees=this.trees.filter(t=>t.z-this.distance>8&&t.z-this.distance<55).sort((a,b)=>a.z-b.z).slice(0,15);
+      const trees=this.trees.filter(t=>{
+        const depth=t.z-this.distance,visibleWidth=depth*(this.viewAspect||1.6)/1.3+t.width;
+        return depth>8&&depth<55&&Math.abs(t.x-pathAt(this.distance))<visibleWidth;
+      }).sort((a,b)=>a.z-b.z).slice(0,15);
       for(const t of trees){t.shake=1;for(let i=0;i<20;i++)this.snow.push({x:t.x+(this.random()-.5)*t.width,z:t.z+(this.random()-.5)*1.4,y:t.height*(.3+this.random()*.65),vx:(this.random()-.5)*.4,vy:.05+this.random()*.3,phase:this.random()*6,age:0});}
       if(this.snow.length>900)this.snow=this.snow.slice(-900);
     }
@@ -110,25 +113,29 @@ export class ForestWorld {
   state(){return {seed:this.seed,time:this.time,distance:this.distance,palette:this.palette,animals:this.animals.length,snowParticles:this.snow.length,eventCount:this.eventCount,lastEvent:this.event};}
 }
 
-// A wave is a left-right-left (or right-left-right) motion, not merely a hand
-// appearing. Distances are normalized, so it behaves across camera sizes.
+// Recognize an intentional hand appearance or a small movement in any
+// direction. A cooldown prevents jitter or a held hand from firing repeatedly.
 export class WaveDetector {
-  constructor(onWave){this.onWave=onWave;this.reset();this.lastWave=-Infinity;}
-  reset(){this.samples=[];this.direction=0;this.turns=0;this.extreme=null;this.lastSeen=-Infinity;this.began=null;}
-  feed(x,y,time){
-    if(!Number.isFinite(x)||!Number.isFinite(y))return;
-    if(time-this.lastSeen>.45||(this.began!==null&&time-this.began>1.5))this.reset();this.lastSeen=time;
-    this.samples.push({x,y,time});this.samples=this.samples.filter(s=>time-s.time<1.5);
-    if(this.extreme===null)this.extreme=x;
-    const n=this.samples.length;if(n<2)return;
-    const dx=x-this.extreme;
-    if(this.direction===0&&Math.abs(dx)>.09){this.direction=Math.sign(dx);this.extreme=x;this.turns=0;this.began=time;}
-    else if(this.direction!==0){
-      if((x-this.extreme)*this.direction>0)this.extreme=x;
-      else if(Math.abs(dx)>.11){this.direction*=-1;this.extreme=x;this.turns++;}
-    }
-    const xs=this.samples.map(s=>s.x),ys=this.samples.map(s=>s.y);
-    if(this.turns>=2&&Math.max(...xs)-Math.min(...xs)>.19&&Math.max(...ys)-Math.min(...ys)<.3&&time-this.lastWave>3.5){this.lastWave=time;this.reset();this.onWave();}
+  constructor(onWave,{cooldown=2,minTravel=.045,appearanceDelay=.22,absenceReset=.75}={}){
+    this.onWave=onWave;this.cooldown=cooldown;this.minTravel=minTravel;
+    this.appearanceDelay=appearanceDelay;this.absenceReset=absenceReset;
+    this.lastWave=-Infinity;this.reset();
   }
-  missing(time){if(time-this.lastSeen>.45)this.reset();}
+  reset(){this.samples=[];this.seenSince=null;this.lastSeen=-Infinity;this.presentTriggered=false;}
+  remaining(time){return Math.max(0,this.cooldown-(time-this.lastWave));}
+  feed(x,y,time){
+    if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(time))return;
+    if(time-this.lastSeen>this.absenceReset)this.reset();
+    this.lastSeen=time;if(this.seenSince===null)this.seenSince=time;
+    const sample={x,y,time};this.samples.push(sample);this.samples=this.samples.filter(s=>time-s.time<1.2);
+    const xs=this.samples.map(s=>s.x),ys=this.samples.map(s=>s.y);
+    const movement=Math.hypot(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
+    const appeared=!this.presentTriggered&&time-this.seenSince>=this.appearanceDelay;
+    const moved=movement>=this.minTravel&&time-this.seenSince>=.1;
+    if(this.remaining(time)===0&&(appeared||moved)){
+      this.lastWave=time;this.presentTriggered=true;this.samples=[sample];
+      this.onWave(appeared?'presence':'movement');
+    }
+  }
+  missing(time){if(time-this.lastSeen>this.absenceReset)this.reset();}
 }

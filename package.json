@@ -1,6 +1,6 @@
 {
   "name": "aurora-walk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "A quiet, emergent pixel forest walk under the northern lights.",

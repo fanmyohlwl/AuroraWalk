@@ -108,7 +108,7 @@ function makeTree(variant){
 }
 export class ForestRenderer {
  constructor(canvas,world){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.world=world;this.trees=Array.from({length:10},(_,i)=>makeTree(i));this.animals=Object.fromEntries(Object.keys(sprites).map(k=>[k,makeAnimal(k)]));this.resize(768,432);}
- resize(w,h){this.canvas.width=Math.round(w);this.canvas.height=Math.round(h);this.w=this.canvas.width;this.h=this.canvas.height;this.ctx.imageSmoothingEnabled=false;}
+ resize(w,h){this.canvas.width=Math.round(w);this.canvas.height=Math.round(h);this.w=this.canvas.width;this.h=this.canvas.height;this.ctx.imageSmoothingEnabled=false;this.world.viewAspect=this.w/this.h;}
  project(x,z,y=0){const depth=z-this.world.distance,s=this.h*.65/Math.max(1,depth),camera=pathAt(this.world.distance);return {x:this.w*.5+(x-camera)*s,y:this.h*.596+(2.4-y)*s,s,depth};}
  draw(){const c=this.ctx,w=this.w,h=this.h,world=this.world,t=world.time;
    const sky=c.createLinearGradient(0,0,0,h*.64);sky.addColorStop(0,'#030b1c');sky.addColorStop(.4,'#092239');sky.addColorStop(1,'#243e58');c.fillStyle=sky;c.fillRect(0,0,w,h);
@@ -125,21 +125,29 @@ export class ForestRenderer {
  drawStars(){const c=this.ctx,w=this.w,h=this.h,t=this.world.time;for(const s of this.world.stars){c.fillStyle=`rgba(185,215,232,${.25+.35*(.5+.5*Math.sin(t*.5+s.phase))})`;c.fillRect(Math.floor(s.x*w),Math.floor(s.y*h),s.size,s.size);if(s.size===2){c.fillStyle='#b2d6e32f';c.fillRect(Math.floor(s.x*w)-2,Math.floor(s.y*h),6,1);}}}
  drawAurora(){
    const c=this.ctx,w=this.w,h=this.h,t=this.world.time,field=this.world.field;
+   // A limited set of stepped shades, like the snow on each fir branch.
+   // All geometry lands on a 3-pixel grid; no smooth gradient or fine ray mesh.
+   const grid=3,shade=[.035,.07,.12,.19,.29,.43,.61,.79,1];
    c.save();c.globalCompositeOperation='screen';
    for(let j=2;j>=0;j--){
-     const band=field.bands[j],color=this.world.colors[j],n=field.count;
-     for(let i=0;i<n-1;i++){
-       const u=i/(n-1),x=Math.floor(u*w),width=Math.ceil(w/(n-1))+1;
+     const band=field.bands[j],color=this.world.colors[j],columns=Math.ceil(w/(grid*2));
+     for(let col=0;col<columns;col++){
+       const u=col/columns,i=Math.min(field.count-1,Math.floor(u*(field.count-1)));
        const sweeping=Math.sin(u*5.7+t*.085+j*1.65)*.057+Math.sin(u*15-t*.16+j)*.014;
-       const base=(.365-j*.075+band.y[i]+sweeping)*h;
-       const energy=band.energy[i],fold=.45+.55*Math.pow(.5+.5*Math.sin(u*42+t*.24+j*3),2);
-       const height=(.12+energy*.045+fold*.07+j*.01)*h;
-       const strength=(.34+energy*.25)*fold*(j===0?1:.83);
-       const grad=c.createLinearGradient(0,base-height,0,base+5);
-       grad.addColorStop(0,rgba(color,0));grad.addColorStop(.22,rgba(color,strength*.08));grad.addColorStop(.55,rgba(color,strength*.35));grad.addColorStop(.82,rgba(color,strength*.78));grad.addColorStop(.96,rgba(color,strength));grad.addColorStop(1,rgba(color,0));
-       c.fillStyle=grad;c.fillRect(x,Math.floor(base-height),width,Math.ceil(height+5));
-       if(i%2===0){c.fillStyle=rgba(color,strength*.62);c.fillRect(x,Math.floor(base),width,1);}
-       if(i%5===0&&energy>.5){c.fillStyle=rgba(color,.09*energy);c.fillRect(x,Math.floor(base-height*.8),1,Math.floor(height*.6));}
+       const base=Math.round((.365-j*.075+band.y[i]+sweeping)*h/grid)*grid;
+       const energy=band.energy[i],fold=.62+.38*Math.pow(.5+.5*Math.sin(u*35+t*.24+j*3),2);
+       const height=Math.round((.12+energy*.045+fold*.06+j*.01)*h/grid)*grid;
+       const strength=Math.min(.63,(.33+energy*.22)*fold*(j===0?1:.78));
+       const x=col*grid*2,top=base-height;
+       for(let y=top;y<base;y+=grid){
+         const progress=(y-top)/height,level=Math.min(8,Math.floor(progress*9));
+         // Fixed pixel stippling softens the top without flickering noise.
+         if(level<2&&(col+Math.floor(y/grid)+j)%3===0)continue;
+         const texture=((col*7+Math.floor(y/grid)*3+j)%11===0)?.81:1;
+         c.fillStyle=rgba(color,shade[level]*strength*texture);
+         c.fillRect(x,y,grid*2,grid);
+       }
+       c.fillStyle=rgba(color,strength*.56);c.fillRect(x,base,grid*2,grid);
      }
    }
    c.restore();
@@ -151,19 +159,11 @@ export class ForestRenderer {
  drawGround(){
    const c=this.ctx,w=this.w,h=this.h,world=this.world;
    const g=c.createLinearGradient(0,h*.59,0,h);g.addColorStop(0,'#7b9aaf');g.addColorStop(.35,'#b1ccd9');g.addColorStop(1,'#c5dce4');c.fillStyle=g;c.fillRect(0,Math.floor(h*.601),w,h);
-   // Road strips follow the same world coordinates as every tree and animal.
-   const depths=[];for(let z=150;z>3;z*=.94)depths.push(z);depths.push(2.3);
-   for(let i=0;i<depths.length-1;i++){
-     const z1=world.distance+depths[i],z2=world.distance+depths[i+1],center1=pathAt(z1),center2=pathAt(z2);
-     const a=this.project(center1-2.45,z1),b=this.project(center1+2.45,z1),d=this.project(center2-2.45,z2),e=this.project(center2+2.45,z2);
-     const near=clamp(1-depths[i]/100,0,1),tint=Math.round(near*11);
-     poly(c,[[a.x,a.y],[b.x,b.y],[e.x,e.y],[d.x,d.y]],`rgb(${113+tint},${145+tint},${170+tint})`);
-     const outerL1=this.project(center1-2.65,z1),outerL2=this.project(center2-2.65,z2),outerR1=this.project(center1+2.65,z1),outerR2=this.project(center2+2.65,z2);
-     poly(c,[[a.x,a.y],[outerL1.x,outerL1.y-1],[outerL2.x,outerL2.y-1],[d.x,d.y]],'#d5e7eb');poly(c,[[b.x,b.y],[outerR1.x,outerR1.y-1],[outerR2.x,outerR2.y-1],[e.x,e.y]],'#d0e3e8');
-   }
+   // Continuous snow cover. Depth comes from drifts, footprints and trees,
+   // with no colored road surface or hard borders through the clearing.
    c.save();c.globalCompositeOperation='soft-light';c.fillStyle=rgba(world.snowColor,.22);c.fillRect(0,h*.61,w,h*.39);c.restore();
-   for(const s of world.ground){const p=this.project(s.x,s.z);if(p.depth<2||p.x<0||p.x>w||p.y>h)continue;const off=Math.abs(s.x-pathAt(s.z));if(off<2.7)continue;const size=clamp(s.size*p.s,1,5);c.fillStyle=s.shade>.55?'#e1edf16e':'#7898b363';c.fillRect(Math.round(p.x),Math.round(p.y),Math.round(size*2.5),Math.max(1,Math.round(size*.4)));}
-   for(let z=Math.ceil((world.distance+3)/1.8)*1.8;z<world.distance+70;z+=1.8){for(let side=-1;side<=1;side+=2){const p=this.project(pathAt(z)+side*.23,z+side*.35);if(p.y>h||p.depth<2.8)continue;c.fillStyle='#506f943d';c.fillRect(Math.round(p.x),Math.round(p.y),Math.max(1,Math.round(p.s*.11)),Math.max(1,Math.round(p.s*.2)));}}
+   for(const s of world.ground){const p=this.project(s.x,s.z);if(p.depth<2||p.x<0||p.x>w||p.y>h)continue;const size=clamp(s.size*p.s,1,5);c.fillStyle=s.shade>.55?'#e1edf16e':'#7898b363';c.fillRect(Math.round(p.x),Math.round(p.y),Math.round(size*2.5),Math.max(1,Math.round(size*.4)));}
+   for(let z=Math.ceil((world.distance+3)/1.8)*1.8;z<world.distance+70;z+=1.8){for(let side=-1;side<=1;side+=2){const p=this.project(pathAt(z)+side*.23,z+side*.35);if(p.y>h||p.depth<2.8)continue;c.fillStyle='#6c8da62b';c.fillRect(Math.round(p.x),Math.round(p.y),Math.max(1,Math.round(p.s*.11)),Math.max(1,Math.round(p.s*.2)));}}
  }
  drawTree(tree){
    const c=this.ctx,p=this.project(tree.x,tree.z);if(p.depth<2)return;

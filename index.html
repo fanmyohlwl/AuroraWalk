@@ -1,68 +1,87 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#06131e">
-  <meta name="description" content="在极光下慢慢走过像素雪林。点击换色，挥手唤醒森林。">
-  <title>Aurora Walk · 雪林漫步</title>
+  <meta name="description" content="An interactive pixel snow forest beneath the northern lights.">
+  <title>Aurora Walk</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2306131e'/%3E%3Cpath d='M5 18L11 6l5 13 5-11 6 8' stroke='%238afac5' stroke-width='3' fill='none'/%3E%3Cpath d='M5 25h22' stroke='%23d9ecf4' stroke-width='3'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
-  <main id="experience" aria-label="极光下的像素雪林漫步">
-    <canvas id="scene" aria-label="动态极光、雪地小道、森林和北欧小动物。点击画面切换极光颜色。" tabindex="0"></canvas>
+  <main id="experience" data-i18n-aria="experience" aria-label="Pixel snow forest under the aurora">
+    <canvas id="scene" data-i18n-aria="scene" aria-label="Animated aurora, snow, forest and animals. Click to change color." tabindex="0"></canvas>
     <div class="vignette" aria-hidden="true"></div>
     <header class="topbar chrome">
-      <a class="wordmark" href="./" aria-label="Aurora Walk 首页"><span class="brand-symbol" aria-hidden="true">✦</span><span>AURORA WALK<small>雪 林 漫 步</small></span></a>
-      <nav aria-label="画面工具">
-        <button id="help-button" class="icon-button" aria-label="查看互动说明" title="互动说明">?</button>
-        <button id="record-button" class="tool-button" aria-label="打开视频录制"><span class="record-dot" aria-hidden="true"></span><span>录制</span></button>
-        <button id="fullscreen-button" class="icon-button" aria-label="全屏" title="全屏"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4"/></svg></button>
+      <nav data-i18n-aria="tools" aria-label="Controls">
+        <button id="language-button" class="tool-button" aria-label="切换到中文">中文</button>
+        <button id="help-button" class="icon-button" data-i18n-aria="help" data-i18n-title="help" aria-label="Controls" title="Controls">?</button>
+        <button id="debug-button" class="tool-button" data-i18n-aria="debugToggle" aria-label="Hand tracking debug (D)" aria-pressed="false"><span data-i18n="debug">Debug</span><kbd>D</kbd></button>
+        <button id="record-button" class="tool-button" data-i18n-aria="recordOpen" aria-label="Video recording"><span class="record-dot" aria-hidden="true"></span><span data-i18n="record">Record</span></button>
+        <button id="fullscreen-button" class="icon-button" data-i18n-aria="fullscreen" data-i18n-title="fullscreen" aria-label="Fullscreen" title="Fullscreen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4"/></svg></button>
       </nav>
     </header>
-    <div class="scene-caption chrome"><span class="eyebrow">A LITTLE FURTHER INTO THE QUIET</span><p>在光的尽头，慢慢走。</p></div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <div class="camera-panel chrome" id="camera-panel" hidden>
-      <video id="camera" autoplay muted playsinline aria-label="本地手势识别预览"></video>
-      <canvas id="hand-overlay" width="320" height="240" aria-hidden="true"></canvas>
-      <span id="camera-status">等待手掌进入画面</span>
-      <button id="camera-close" aria-label="关闭摄像头">×</button>
-    </div>
+    <aside class="camera-panel" id="camera-panel" data-i18n-aria="debugToggle" aria-label="Hand tracking debug (D)" hidden>
+      <div class="debug-heading"><strong>ml5 HandPose</strong><button id="camera-close" data-i18n-aria="debugClose" aria-label="Close debug window">×</button></div>
+      <div class="camera-view">
+        <video id="camera" autoplay muted playsinline data-i18n-aria="camera" aria-label="Local camera input"></video>
+        <canvas id="hand-overlay" width="320" height="240" aria-hidden="true"></canvas>
+        <p id="camera-placeholder" data-i18n="cameraOff">Enable hand tracking to see the camera input.</p>
+      </div>
+      <p id="camera-status" role="status">Off</p>
+      <dl class="debug-metrics">
+        <dt data-i18n="debugHands">Hands</dt><dd id="debug-hands">0</dd>
+        <dt data-i18n="debugConfidence">Confidence</dt><dd id="debug-confidence">—</dd>
+        <dt data-i18n="debugFPS">Inference</dt><dd id="debug-fps">—</dd>
+        <dt data-i18n="debugInput">Input</dt><dd id="debug-input">—</dd>
+        <dt data-i18n="debugCooldown">Cooldown</dt><dd id="debug-cooldown">0.0 s</dd>
+        <dt data-i18n="debugEvents">Events</dt><dd id="debug-events">0</dd>
+        <dt data-i18n="debugLast">Last event</dt><dd id="debug-last">None</dd>
+      </dl>
+      <button id="camera-stop" class="debug-stop" data-i18n="cameraStop" hidden>Turn off camera</button>
+    </aside>
     <footer class="bottom chrome">
-      <div class="interaction-hint" id="interaction-hint">点击天空换色 · 挥手遇见惊喜</div>
+      <div class="interaction-hint" id="interaction-hint" role="status">Click to change color · Show or move a hand for an event</div>
       <div class="controls">
-        <div class="palette-control" role="group" aria-label="极光颜色">
-          <span class="control-label">极光</span>
-          <button class="swatch active" data-palette="0" style="--swatch:#91f7b1" aria-label="苔原绿" aria-pressed="true" title="苔原绿"></button>
-          <button class="swatch" data-palette="1" style="--swatch:#b398ff" aria-label="暮光紫" aria-pressed="false" title="暮光紫"></button>
-          <button class="swatch" data-palette="2" style="--swatch:#ff8799" aria-label="绯红夜" aria-pressed="false" title="绯红夜"></button>
-          <button class="swatch" data-palette="3" style="--swatch:#87e9f4" aria-label="冰川蓝" aria-pressed="false" title="冰川蓝"></button>
+        <div class="palette-control" role="group" data-i18n-aria="palette" aria-label="Aurora">
+          <span class="control-label" data-i18n="palette">Aurora</span>
+          <button class="swatch active" data-palette="0" style="--swatch:#91f7b1" data-i18n-aria="palette0" data-i18n-title="palette0" aria-label="Tundra green" aria-pressed="true" title="Tundra green"></button>
+          <button class="swatch" data-palette="1" style="--swatch:#b398ff" data-i18n-aria="palette1" data-i18n-title="palette1" aria-label="Twilight violet" aria-pressed="false" title="Twilight violet"></button>
+          <button class="swatch" data-palette="2" style="--swatch:#ff8799" data-i18n-aria="palette2" data-i18n-title="palette2" aria-label="Crimson" aria-pressed="false" title="Crimson"></button>
+          <button class="swatch" data-palette="3" style="--swatch:#87e9f4" data-i18n-aria="palette3" data-i18n-title="palette3" aria-label="Ice blue" aria-pressed="false" title="Ice blue"></button>
         </div>
         <span class="divider" aria-hidden="true"></span>
-        <button id="gesture-button" class="action-button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v7c0 4-3 6-6 6h-1c-2 0-4-1-5-3l-4-5a1.5 1.5 0 0 1 2-2l3 3"/></svg><span id="gesture-label">开启手势</span></button>
-        <button id="surprise-button" class="action-button" title="和挥手一样，随机让树落雪或召唤动物（W）"><span aria-hidden="true">✧</span><span>森林惊喜</span></button>
+        <button id="gesture-button" class="action-button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12V6a1.5 1.5 0 0 1 3 0v5-7a1.5 1.5 0 0 1 3 0v7-5a1.5 1.5 0 0 1 3 0v6-3a1.5 1.5 0 0 1 3 0v7c0 4-3 6-6 6h-1c-2 0-4-1-5-3l-4-5a1.5 1.5 0 0 1 2-2l3 3"/></svg><span id="gesture-label">Enable hand</span></button>
+        <button id="surprise-button" class="action-button" data-i18n-title="surpriseTitle" title="Release snow or summon an animal (W)"><span aria-hidden="true">✧</span><span data-i18n="surprise">Forest event</span></button>
         <span class="divider" aria-hidden="true"></span>
-        <button id="pause-button" class="icon-button" aria-label="暂停漫步" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg></button>
+        <button id="pause-button" class="icon-button" aria-label="Pause" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"/></svg></button>
       </div>
-      <div class="footer-meta"><span>一片每次都不同的森林</span><button id="hide-button">沉浸模式 <kbd>H</kbd></button></div>
+      <div class="footer-meta"><button id="hide-button"><span data-i18n="hide">Hide controls</span><kbd>H</kbd></button></div>
     </footer>
-    <button id="show-button" class="restore-button" hidden>显示操作 <kbd>H</kbd></button>
-    <div id="record-indicator" class="record-indicator" hidden><span class="record-dot"></span><span id="record-time">00:00</span><button id="stop-recording">结束录制</button></div>
+    <button id="show-button" class="restore-button" hidden><span data-i18n="show">Show controls</span> <kbd>H</kbd></button>
+    <div id="record-indicator" class="record-indicator" hidden><span class="record-dot"></span><span id="record-time">00:00</span><button id="stop-recording" data-i18n="recordStop">Stop recording</button></div>
   </main>
   <dialog id="help-dialog">
-    <form method="dialog"><button class="dialog-close" aria-label="关闭说明">×</button></form>
-    <span class="eyebrow">MAKE YOURSELF AT HOME</span><h1>不用赶路。</h1><p>沿着雪地小道一直走，森林会慢慢在你身边展开。</p>
-    <dl><dt>点击画面 / <kbd>C</kbd></dt><dd>让极光在绿色、紫色、绯红和冰蓝之间流动。</dd><dt>开启手势，左右挥手 / <kbd>W</kbd></dt><dd>随机抖落树上的雪，或遇见一位森林居民。</dd><dt><kbd>空格</kbd></dt><dd>暂停或继续漫步。</dd><dt><kbd>H</kbd></dt><dd>隐藏界面，只留森林。</dd></dl>
-    <p class="quiet-note">手势需要摄像头和首次联网加载 ml5 模型。摄像头画面仅在浏览器内用于识别；不开摄像头，也可以用「森林惊喜」。</p>
+    <form method="dialog"><button class="dialog-close" data-i18n-aria="close" aria-label="Close">×</button></form>
+    <h1 data-i18n="helpTitle">Controls</h1>
+    <dl>
+      <dt><span data-i18n="helpColor">Click the scene / C</span></dt><dd data-i18n="helpColorDetail">Cycle green, violet, crimson and ice blue.</dd>
+      <dt data-i18n="helpHand">Show or move your hand / W</dt><dd data-i18n="helpHandDetail">Hold a hand in view briefly or move it a little to trigger a forest event.</dd>
+      <dt><kbd>D</kbd></dt><dd data-i18n="helpDebugDetail">Toggle camera input, hand landmarks and detection stats.</dd>
+      <dt data-i18n="helpPause">Space</dt><dd data-i18n="helpPauseDetail">Pause or resume the scene.</dd>
+      <dt><kbd>H</kbd></dt><dd data-i18n="helpHideDetail">Hide or restore the controls.</dd>
+    </dl>
+    <p class="quiet-note" data-i18n="privacy">Hand tracking loads an ml5 model online. Camera frames stay in your browser.</p>
   </dialog>
   <dialog id="record-dialog">
-    <form method="dialog"><button class="dialog-close" aria-label="关闭录制设置">×</button></form>
-    <span class="eyebrow">TAKE A MOMENT WITH YOU</span><h1>带走一段极光。</h1><p>录制纯动画画面，不包含按钮或摄像头预览。</p>
-    <label>画面尺寸<select id="record-size"><option value="1920x1080">1920 × 1080 · 横屏</option><option value="1280x720">1280 × 720 · 横屏</option><option value="1080x1920">1080 × 1920 · 竖屏</option></select></label>
-    <label>时长<select id="record-duration"><option value="15">15 秒 · teaser</option><option value="30">30 秒</option><option value="60">60 秒</option><option value="0">手动结束（最长 3 分钟）</option></select></label>
-    <p class="quiet-note" id="record-support">30 fps · 完成后下载视频文件</p><button id="start-recording" class="primary-button">开始录制</button>
+    <form method="dialog"><button class="dialog-close" data-i18n-aria="close" aria-label="Close">×</button></form>
+    <h1 data-i18n="recordTitle">Record video</h1><p data-i18n="recordDescription">Only the animation is recorded. Controls and camera input are excluded.</p>
+    <label><span data-i18n="recordSize">Resolution</span><select id="record-size"><option value="1920x1080">1920 × 1080 · Landscape</option><option value="1280x720">1280 × 720 · Landscape</option><option value="1080x1920">1080 × 1920 · Portrait</option></select></label>
+    <label><span data-i18n="recordDuration">Duration</span><select id="record-duration"><option value="15" data-i18n="teaser">15 seconds · teaser</option><option value="30" data-i18n="seconds30">30 seconds</option><option value="60" data-i18n="seconds60">60 seconds</option><option value="0" data-i18n="manual">Manual stop (maximum 3 minutes)</option></select></label>
+    <p class="quiet-note" id="record-support">30 fps</p><button id="start-recording" class="primary-button" data-i18n="recordStart">Start recording</button>
   </dialog>
 </body>
 </html>

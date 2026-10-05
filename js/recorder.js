@@ -1,11 +1,12 @@
+import { t } from './i18n.js';
 export class SceneRecorder extends EventTarget {
   constructor(getCanvas){super();this.getCanvas=getCanvas;this.active=false;this.result=null;this.elapsed=0;}
   static mimeType(){if(!globalThis.MediaRecorder)return null;return ['video/mp4;codecs=avc1.42001f','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||null;}
   async start({width=1920,height=1080,fps=30,duration=15,download=true}={}){
-    if(this.active)throw new Error('已有录制正在进行');
-    const mimeType=SceneRecorder.mimeType();if(!mimeType||!HTMLCanvasElement.prototype.captureStream)throw new Error('当前浏览器不支持画面录制，请使用新版 Chrome、Edge 或 Safari');
-    if(!Number.isInteger(width)||!Number.isInteger(height)||width<320||height<320||width>3840||height>3840||width*height>8294400)throw new Error('录制尺寸应在 320–3840 像素之间，总像素不超过 4K');
-    if(!Number.isFinite(fps)||fps<1||fps>60||!Number.isFinite(duration)||duration<0||duration>180)throw new Error('帧率为 1–60 fps，时长为 0–180 秒');
+    if(this.active)throw new Error(t('recordAlready'));
+    const mimeType=SceneRecorder.mimeType();if(!mimeType||!HTMLCanvasElement.prototype.captureStream)throw new Error(t('recordUnsupported'));
+    if(!Number.isInteger(width)||!Number.isInteger(height)||width<320||height<320||width>3840||height>3840||width*height>8294400)throw new Error(t('recordDimensions'));
+    if(!Number.isFinite(fps)||fps<1||fps>60||!Number.isFinite(duration)||duration<0||duration>180)throw new Error(t('recordOptions'));
     this.output=document.createElement('canvas');this.output.width=width;this.output.height=height;this.ctx=this.output.getContext('2d',{alpha:false});this.ctx.imageSmoothingEnabled=false;
     this.chunks=[];this.download=download;this.duration=duration||180;this.elapsed=0;this.result=null;
     this.draw();this.stream=this.output.captureStream(fps);this.recorder=new MediaRecorder(this.stream,{mimeType,videoBitsPerSecond:8000000});
@@ -13,7 +14,7 @@ export class SceneRecorder extends EventTarget {
     // Attach a handler immediately; programmatic callers can still await stop().
     this.finished.catch(()=>{});
     this.recorder.ondataavailable=e=>{if(e.data.size)this.chunks.push(e.data);};
-    this.recorder.onerror=e=>{this.finishError(e.error||new Error('视频编码失败'));};
+    this.recorder.onerror=e=>{this.finishError(e.error||new Error(t('encodingError')));};
     this.recorder.onstop=()=>{
       if(this.failed)return;this.cleanup();
       const blob=new Blob(this.chunks,{type:this.recorder.mimeType}),extension=this.recorder.mimeType.includes('mp4')?'mp4':'webm';
