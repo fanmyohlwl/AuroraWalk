@@ -35,3 +35,9 @@ Recording targets 30 fps but follows the browser's actual render/encoding throug
 - Nine unit checks pass, including non-4:3 camera metadata, skipping unavailable frames, canvas inference while debug is closed, rejection of nonfinite model results, and the existing scene/event checks.
 - The full application was exercised in the in-app browser with the real ml5 model and a canvas-generated video stream of the hand photograph. It detected one hand, drew all 21 landmarks, reported 99.8% confidence, and triggered a snow event. Holding the hand still did not repeatedly trigger events. Removing the hand returned zero hands with no extra events; reintroducing it while debug was closed triggered a second event. English/Chinese diagnostics were checked. Physical camera hardware has not been tested by this task.
 - The photograph and temporary diagnostic pages stay local and are excluded from Git and distributable archives.
+
+## GitHub Pages publication
+
+- GitHub Pages is configured to publish the main branch from the repository root at https://fanmyohlwl.github.io/AuroraWalk/.
+- The live HTTPS site was verified in the in-app browser: the aurora/forest canvas renders, the violet swatch switches palette, English/Chinese switching works, the debug panel reports model input/backend fields, and the manual forest event increments the counter and displays an animal.
+- Physical camera recognition on the published site has not been tested by this task. The same verified HandPose implementation is deployed, and camera permission is requested only when the user enables hand tracking.

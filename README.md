@@ -2,6 +2,8 @@
 
 A quiet pixel forest walk beneath an emergent aurora. Current version: **1.0.1**. Made for **AI, Design & Creativity**.
 
+[Try the live website](https://fanmyohlwl.github.io/AuroraWalk/) · [GitHub repository](https://github.com/fanmyohlwl/AuroraWalk)
+
 ## Try it locally
 
 Requires Python 3, with no install or build step:
@@ -72,14 +74,11 @@ const pngDataURL = auroraWalk.captureFrame({ width: 1920, height: 1080 });
 
 ## GitHub Pages
 
-This is a static website, ready for GitHub Pages:
+The live website is [fanmyohlwl.github.io/AuroraWalk](https://fanmyohlwl.github.io/AuroraWalk/).
 
-1. Create a repository and upload the **contents of this `aurora-walk` directory** to its root. No `sources/` or previous project files are needed.
-2. Under **Settings → Pages**, choose **Deploy from a branch**, your default branch, and **/ (root)**.
-3. The public address will be `https://YOUR_USERNAME.github.io/YOUR_REPOSITORY/`.
-4. Include the repository address and Pages address in your assignment.
+Publishing is enabled under **Settings → Pages** with **Deploy from a branch**, branch **main**, and folder **/ (root)**. Pushing a new commit to main automatically rebuilds and publishes the website. Include the repository and live website addresses in the assignment.
 
-`.nojekyll` is included. All application imports are relative, so repository subpaths work. GitHub Pages uses HTTPS, allowing the optional camera interaction. No API keys, backend or billing account are required. The code is available at [fanmyohlwl/AuroraWalk](https://github.com/fanmyohlwl/AuroraWalk). GitHub Pages deployment has not yet been configured by this task.
+`.nojekyll` is included. All application imports are relative, so repository subpaths work. GitHub Pages uses HTTPS, allowing the optional camera interaction. No API keys, backend or billing account are required.
 
 ## Structure
 
@@ -110,4 +109,4 @@ Original canvas artwork and scene code are included in this repository. No photo
 - `1.0.0`: the completed original version, committed before these changes.
 - `1.0.1`: the snow-only walk, stepped pixel aurora, larger trees/animals, relaxed tracking, D debug panel and English/Chinese interface.
 
-Both annotated tags and the latest code are published at [fanmyohlwl/AuroraWalk](https://github.com/fanmyohlwl/AuroraWalk). The main branch also includes the subsequent HandPose input fix. GitHub Pages deployment is configured separately.
+Both annotated tags and the latest code are published at [fanmyohlwl/AuroraWalk](https://github.com/fanmyohlwl/AuroraWalk). The main branch also includes the subsequent HandPose input fix and is the publishing source for GitHub Pages.
