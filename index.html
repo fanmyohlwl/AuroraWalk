@@ -27,7 +27,8 @@
     <aside class="camera-panel" id="camera-panel" data-i18n-aria="debugToggle" aria-label="Hand tracking debug (D)" hidden>
       <div class="debug-heading"><strong>ml5 HandPose</strong><button id="camera-close" data-i18n-aria="debugClose" aria-label="Close debug window">×</button></div>
       <div class="camera-view">
-        <video id="camera" autoplay muted playsinline data-i18n-aria="camera" aria-label="Local camera input"></video>
+        <video id="camera" width="640" height="480" autoplay muted playsinline hidden aria-hidden="true"></video>
+        <canvas id="camera-frame" width="640" height="480" data-i18n-aria="camera" aria-label="Local model input frame"></canvas>
         <canvas id="hand-overlay" width="320" height="240" aria-hidden="true"></canvas>
         <p id="camera-placeholder" data-i18n="cameraOff">Enable hand tracking to see the camera input.</p>
       </div>
@@ -37,6 +38,7 @@
         <dt data-i18n="debugConfidence">Confidence</dt><dd id="debug-confidence">—</dd>
         <dt data-i18n="debugFPS">Inference</dt><dd id="debug-fps">—</dd>
         <dt data-i18n="debugInput">Input</dt><dd id="debug-input">—</dd>
+        <dt data-i18n="debugBackend">Backend</dt><dd id="debug-backend">—</dd>
         <dt data-i18n="debugCooldown">Cooldown</dt><dd id="debug-cooldown">0.0 s</dd>
         <dt data-i18n="debugEvents">Events</dt><dd id="debug-events">0</dd>
         <dt data-i18n="debugLast">Last event</dt><dd id="debug-last">None</dd>

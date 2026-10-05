@@ -1,5 +1,12 @@
 # Versions
 
+## HandPose input fix after 1.0.1
+
+- Corrected zero-sized HTML video attributes by synchronizing them with camera metadata. Inference now uses an explicitly sized canvas captured from a ready video frame, with no pixel mirroring before detection.
+- The debug preview displays that exact inference frame and its matching landmarks, input dimensions and TensorFlow backend. Invalid coordinates and nonfinite confidence cannot trigger events.
+- Verified the actual ml5 1.3.1 model against a private local hand image fed through a generated video stream: 21 landmarks, 99.8% confidence and a forest event. The private fixture is excluded from the repository.
+- Existing annotated tags 1.0.0 and 1.0.1 remain unchanged.
+
 ## 1.0.1
 
 - Changed the aurora to stepped, limited-tone pixels with stippled edges, matching the forest sprites. Removed the smooth curtain gradients and fine vertical rays.

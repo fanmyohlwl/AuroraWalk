@@ -57,7 +57,7 @@ $('#gesture-button').onclick=()=>toggleGestures().catch(error=>toast(error.messa
 addEventListener('pagehide',()=>{gestures?.stop();if(recorder.active)recorder.stop();});
 window.auroraWalk=Object.freeze({
  get state(){return {...world.state(),paused,recording:recorder.active,gestures:!!gestures?.active,debug:!!gestures?.debug,language};},
- get tracking(){return {phase:gestures?.phase||'off',hands:gestures?.handCount||0,confidence:gestures?.confidence??null,fps:gestures?.fps||0,cooldown:gestures?.wave.remaining(performance.now()/1000)||0};},
+ get tracking(){return {phase:gestures?.phase||'off',hands:gestures?.handCount||0,confidence:gestures?.confidence??null,fps:gestures?.fps||0,backend:gestures?.backend||null,input:gestures?.frameReady?{width:gestures.frame.width,height:gestures.frame.height}:null,cooldown:gestures?.wave.remaining(performance.now()/1000)||0};},
  pause:()=>setPaused(true),resume:()=>setPaused(false),setPalette:palette,triggerEvent:surprise,setImmersive,setLanguage,
  setDebug:async value=>(await getGestures()).setDebug(value),
  recording:{start:options=>recorder.start(options),stop:()=>recorder.stop(),get supported(){return !!SceneRecorder.mimeType();}},

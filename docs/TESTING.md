@@ -27,3 +27,11 @@ Recording targets 30 fps but follows the browser's actual render/encoding throug
 - The live in-app browser was checked at its normal viewport and 390 × 844: stepped aurora, snow without a road, larger sprites, English default, Chinese switching, D debug toggle and event statistics. Every visible mobile control fits inside the viewport.
 - The recording dialog displays English resolution/duration choices and reports MP4 support. The encoding path is retained from the verified 1.0.0 implementation.
 - The tests use synthetic landmarks. This update has not been tested with a real person's hand or physical camera. Use D to check your hand confidence, input image and event counter when trying your camera.
+
+## HandPose input regression after 1.0.1
+
+- Reproduced the input problem with real ml5 1.3.1 and a private screenshot of an open hand: an HTML video had intrinsic dimensions of 640 × 480 but element attributes of 0 × 0. Direct detection returned nonfinite confidence and coordinates. Giving the video explicit 640 × 480 attributes returned 21 finite landmarks at 0.99788 confidence in three consecutive detections. Both WebGL and the default WebGPU backend recognized the corrected input.
+- The application now waits for usable video data, synchronizes element dimensions, and copies an unmirrored frame into a correctly sized inference canvas. The debug preview shows this same frame; only the display is mirrored.
+- Nine unit checks pass, including non-4:3 camera metadata, skipping unavailable frames, canvas inference while debug is closed, rejection of nonfinite model results, and the existing scene/event checks.
+- The full application was exercised in the in-app browser with the real ml5 model and a canvas-generated video stream of the hand photograph. It detected one hand, drew all 21 landmarks, reported 99.8% confidence, and triggered a snow event. Holding the hand still did not repeatedly trigger events. Removing the hand returned zero hands with no extra events; reintroducing it while debug was closed triggered a second event. English/Chinese diagnostics were checked. Physical camera hardware has not been tested by this task.
+- The photograph and temporary diagnostic pages stay local and are excluded from Git and distributable archives.

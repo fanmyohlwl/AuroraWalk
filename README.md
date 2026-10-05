@@ -18,7 +18,7 @@ Open `http://localhost:8091`. ES modules and camera access require a web server;
 - **Click the scene** or press **C**: cycle green, violet, crimson, ice blue. The four swatches select a palette directly. Move the mouse to gently influence the breeze.
 - **Enable gestures**: allow the camera, then hold your hand in view for roughly 0.22 seconds, or move it a small distance in any direction. A random event releases snow from visible nearby trees or summons animals. Acceptance is relaxed to 35% confidence, with a two-second cooldown. Holding still does not repeatedly trigger events. The first use loads ml5 and its hand model over the network. Camera video stays in the browser; it is neither stored nor sent to a server by this app.
 - **Forest event / W** triggers the same random event without a camera.
-- **D / Debug** shows the mirrored camera image, all detected hand landmarks and connections, confidence, inference FPS, cooldown and event counts. Debug does not automatically turn on the camera. Closing the debug window keeps tracking active; use **Turn off camera** to stop tracking and release the stream.
+- **D / Debug** shows the exact model input frame (mirrored for display), detected hand landmarks and connections, confidence, inference FPS, input dimensions, TensorFlow backend, cooldown and event counts. Debug does not automatically turn on the camera. Closing the debug window keeps tracking active; use **Turn off camera** to stop tracking and release the stream.
 - The interface starts in **English** on every visit. **中文 / EN** switches the entire interface, dialogs, errors and debug labels. Decorative titles and taglines have been removed.
 - **Space** pauses the entire scene. **H** hides the interface. Fullscreen is available where supported.
 - With the operating system's reduced motion preference, the scene starts paused.
@@ -51,7 +51,7 @@ auroraWalk.resume();
 auroraWalk.setImmersive(true);
 auroraWalk.setLanguage('zh');            // 'en' restores English
 await auroraWalk.setDebug(true);        // Does not turn on the camera
-console.log(auroraWalk.tracking);       // phase, hands, confidence, fps, cooldown
+console.log(auroraWalk.tracking);       // phase, hands, confidence, fps, backend, input, cooldown
 
 // Start from a button click or other user gesture for browser compatibility.
 await auroraWalk.recording.start({
