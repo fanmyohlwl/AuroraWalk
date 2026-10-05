@@ -79,7 +79,7 @@ This is a static website, ready for GitHub Pages:
 3. The public address will be `https://YOUR_USERNAME.github.io/YOUR_REPOSITORY/`.
 4. Include the repository address and Pages address in your assignment.
 
-`.nojekyll` is included. All application imports are relative, so repository subpaths work. GitHub Pages uses HTTPS, allowing the optional camera interaction. No API keys, backend or billing account are required. This version is local; no repository has been created or deployed by this task.
+`.nojekyll` is included. All application imports are relative, so repository subpaths work. GitHub Pages uses HTTPS, allowing the optional camera interaction. No API keys, backend or billing account are required. The code is available at [fanmyohlwl/AuroraWalk](https://github.com/fanmyohlwl/AuroraWalk). GitHub Pages deployment has not yet been configured by this task.
 
 ## Structure
 
@@ -110,4 +110,4 @@ Original canvas artwork and scene code are included in this repository. No photo
 - `1.0.0`: the completed original version, committed before these changes.
 - `1.0.1`: the snow-only walk, stepped pixel aurora, larger trees/animals, relaxed tracking, D debug panel and English/Chinese interface.
 
-Tags are local annotated Git tags in this directory's repository. No GitHub remote or public deployment has been created.
+Both annotated tags and the latest code are published at [fanmyohlwl/AuroraWalk](https://github.com/fanmyohlwl/AuroraWalk). The main branch also includes the subsequent HandPose input fix. GitHub Pages deployment is configured separately.
